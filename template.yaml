@@ -23,7 +23,7 @@ Metadata:
 
 Parameters:
   ConfigJsonKeyName:
-    Default: /Lambda/CWLogsToSlack/Configuration
+    Default: /lambda/CWLogsToSlack/Configuration
     Description: Configuration(JSON) KeyName using ParameterStore
     Type: String
     MinLength: 1
