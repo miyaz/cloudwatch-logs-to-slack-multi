@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  CWLogsToSlack
+  
+  SAM Template for CWLogsToSlack
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: cloudwatch-logs-to-slack-multi
+    Description: Filters CloudWatch logs and publishes them to Slack
+    Author: Shinji Miyazato
+    SpdxLicenseId: MIT
+    # paths are relative to .aws-sam/build directory
+    LicenseUrl: ./LICENSE
+    ReadmeUrl: ./README.md
+    Labels: [serverless,slack,CloudWatch,logs]
+    HomePageUrl: https://github.com/chander/cw-logs-to-slack-multi
+    # Update the semantic version and run sam publish to publish a new version of your app
+    SemanticVersion: 1.0.1
+    # best practice is to use git tags for each release and link to the version tag as your source code URL
+    SourceCodeUrl: https://github.com/chander/cw-logs-to-slack-multi/tree/1.0.1
+
+Parameters:
+  ConfigJsonKeyName:
+    Default: /Lambda/CWLogsToSlack/Configuration
+    Description: Configuration(JSON) KeyName using ParameterStore
+    Type: String
+    MinLength: 1
+    AllowedPattern: '/[a-zA-Z0-9/]*'
+
+Resources:
+  CWLogsToSlackFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: CWLogsToSlack/
+      Handler: CWLogsToSlack
+      Runtime: go1.x
+      Timeout: 10
+      MemorySize: 128
+      ReservedConcurrentExecutions: 1
+      Environment:
+        Variables:
+          CONFIG_JSON_PARAM_NAME: !Sub ${ConfigJsonKeyName}
+      Policies:
+        - Statement:
+            - Sid: SSMDescribeParametersPolicy
+              Effect: Allow
+              Action:
+                - ssm:DescribeParameters
+              Resource: '*'
+            - Sid: SSMGetParameterPolicy
+              Effect: Allow
+              Action:
+                - ssm:GetParameters
+                - ssm:GetParameter
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ConfigJsonKeyName}
+
+  CWLogsToSlackFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${CWLogsToSlackFunction}
+      RetentionInDays: 14
+
+Outputs:
+  CWLogsToSlackFunction:
+    Description: "Lambda Function ARN"
+    Value: !GetAtt CWLogsToSlackFunction.Arn
