@@ -33,6 +33,7 @@ Resources:
   CWLogsToSlackFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: CWLogsToSlack
       CodeUri: CWLogsToSlack/
       Handler: CWLogsToSlack
       Runtime: go1.x
