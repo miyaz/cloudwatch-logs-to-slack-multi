@@ -35,7 +35,7 @@ Systems Managerのパラメータストア
 ```
 {
   "default": {
-    "hook_url":"https://hooks.slack.com/services/T0YB8C27P/****",
+    "hook_url":"https://hooks.slack.com/services/HOGEHOGEH/****",
     "channel":"{デフォルトの通知先チャンネルID}",
     "username":"{サービス／ステージを識別する名称}",
     "icon_emoji":"{サービス／ステージを識別する絵文字アイコン}",
@@ -73,19 +73,6 @@ rulesでprefixマッチしても color以外(channel,icon_emoji,username)を
 ## 動作確認
 
 sam build
-sam local invoke --event event.json --profile kai
+sam local invoke --event event.json
 sam deploy --guided
-
-
-1. 新しく動作確認用のlambda関数を作るなど、どうにかして開発と動作確認をする
-2. 以下のコマンドをmacで実行し、開発環境にリリースする（AWS_PROFILEで指定するのは開発環境用のprofile）
-```
-AWS_PROFILE=kai gulp release
-```
-3. 開発環境で動作確認を行う
-4. 同様に以下のコマンドを実行し、本番環境にリリースする
-```
-AWS_PROFILE=hon gulp release
-```
-5. 本番環境で動作確認を行う
 
