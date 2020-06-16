@@ -17,9 +17,9 @@ Metadata:
     Labels: [serverless,slack,CloudWatch,logs]
     HomePageUrl: https://github.com/miyaz/cloudwatch-logs-to-slack-multi
     # Update the semantic version and run sam publish to publish a new version of your app
-    SemanticVersion: 0.0.5
+    SemanticVersion: 0.0.6
     # best practice is to use git tags for each release and link to the version tag as your source code URL
-    SourceCodeUrl: https://github.com/miyaz/cloudwatch-logs-to-slack-multi/tree/0.0.5
+    SourceCodeUrl: https://github.com/miyaz/cloudwatch-logs-to-slack-multi/tree/0.0.6
 
 Parameters:
   ConfigJsonKeyName:
