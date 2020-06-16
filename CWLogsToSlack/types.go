@@ -28,13 +28,11 @@ type Field struct {
 }
 
 type Config struct {
-	Default   Param   `json:"default"`
-	Rules     []Param `json:"rules"`
-	LogGroup  string
-	LogStream string
+	Default Parameter   `json:"default"`
+	Rules   []Parameter `json:"rules"`
 }
 
-type Param struct {
+type Parameter struct {
 	IfPrefix  string `json:"if_prefix"`
 	HookURL   string `json:"hook_url"`
 	Channel   string `json:"channel"`
@@ -45,9 +43,7 @@ type Param struct {
 
 // get parameter value of specified fieldName using reflection
 //   ref. https://leben.mobi/go/reflect/go-programming/structure/#FieldByName
-func (c Config) getParameter(fieldName string) (value string) {
-	logGroup := c.LogGroup
-	logStream := c.LogStream
+func (c Config) getParameter(logGroup, logStream, fieldName string) (value string) {
 	value = c.Default.getValue(fieldName)
 
 	logGroupStream := logGroup + ":" + logStream
@@ -70,7 +66,7 @@ func (c Config) validateParameter() bool {
 	return true
 }
 
-func (p Param) getValue(fieldName string) string {
+func (p Parameter) getValue(fieldName string) string {
 	rvPrm := reflect.ValueOf(p)
 	v := rvPrm.FieldByName(fieldName).Interface()
 	if _, ok := v.(string); ok {

@@ -43,6 +43,7 @@ Resources:
       Environment:
         Variables:
           CONFIG_JSON_PARAM_NAME: !Sub ${ConfigJsonKeyName}
+          THIS_REGION: !Sub ${AWS::Region}
       Policies:
         - Statement:
             - Sid: SSMDescribeParametersPolicy
@@ -57,7 +58,7 @@ Resources:
                 - ssm:GetParameter
               Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ConfigJsonKeyName}
 
-  CWLogsToSlackFunctionLogGroup:
+  CWLogsToSlackLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /aws/lambda/${CWLogsToSlackFunction}
@@ -67,3 +68,6 @@ Outputs:
   CWLogsToSlackFunction:
     Description: "Lambda Function ARN"
     Value: !GetAtt CWLogsToSlackFunction.Arn
+  CWLogsToSlackLogGroup:
+    Description: "LogGroup Name"
+    Value: !Ref CWLogsToSlackLogGroup

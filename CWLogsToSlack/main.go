@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
@@ -16,15 +17,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm"
 )
 
-const (
-	region       = "ap-northeast-1"
-	paramEnvName = "CONFIG_JSON_PARAM_NAME"
-)
-
 var config Config
+var region string
 
 func init() {
-	configJSON := fetchParameterStore(os.Getenv(paramEnvName))
+	region = os.Getenv("THIS_REGION")
+	configJSON := fetchParameterStore(os.Getenv("CONFIG_JSON_PARAM_NAME"))
 	json.Unmarshal([]byte(configJSON), &config)
 }
 
@@ -42,15 +40,13 @@ func CWLogsToSlack(logsEvent events.CloudwatchLogsEvent) error {
 	if err != nil {
 		return err
 	}
-	config.LogGroup = logsData.LogGroup
-	config.LogStream = logsData.LogStream
 
 	slackMessage := makeMessage(logsData, config)
 
-	hookURL := config.getParameter("HookURL")
-	postToSlack(hookURL, slackMessage)
+	hookURL := config.getParameter(logsData.LogGroup, logsData.LogStream, "HookURL")
+	err = postToSlack(hookURL, slackMessage)
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 
 	return nil
@@ -75,13 +71,23 @@ func fetchParameterStore(paramName string) string {
 }
 
 func generateLinkURL(logGroup, logStream string, logEvent events.CloudwatchLogsLogEvent) string {
-	escapedLogGroup := strings.Replace(logGroup, "/", "$252F", -1)
-	escapedLogStream := strings.Replace(logStream, "/", "$252F", -1)
-
 	linkBase := fmt.Sprintf("https://%s.console.aws.amazon.com/cloudwatch/home?region=%s", region, region)
-	linkTmpl := "%s#logsV2:log-groups/log-group/%s/log-events/%s$3Fstart$3D%d$26refEventId$3D%s"
-	linkURL := fmt.Sprintf(linkTmpl, linkBase, escapedLogGroup, escapedLogStream, logEvent.Timestamp, logEvent.ID)
+	if region == "us-east-1" {
+		linkBase = fmt.Sprintf("https://console.aws.amazon.com/cloudwatch/home?region=%s", region)
+	}
+	linkLogEvent := fmt.Sprintf("?start=%d&refEventId=%s", logEvent.Timestamp, logEvent.ID)
+	linkTmpl := "%s#logsV2:log-groups/log-group/%s/log-events/%s%s"
+	linkURL := fmt.Sprintf(linkTmpl, linkBase, encode(logGroup, 2), encode(logStream, 2), encode(linkLogEvent, 1))
 	return linkURL
+}
+
+// encode for aws console url
+func encode(input string, count int) (output string) {
+	for i := 0; i < count; i++ {
+		input = url.QueryEscape(input)
+	}
+	output = strings.Replace(input, "%", "$", -1)
+	return
 }
 
 func makeMessage(logsData events.CloudwatchLogsData, config Config) []byte {
@@ -89,6 +95,7 @@ func makeMessage(logsData events.CloudwatchLogsData, config Config) []byte {
 	logStream := logsData.LogStream
 
 	linkURL := generateLinkURL(logGroup, logStream, logsData.LogEvents[0])
+
 	timestamp := logsData.LogEvents[0].Timestamp
 	fields := []Field{}
 	for _, logEvent := range logsData.LogEvents {
@@ -99,26 +106,23 @@ func makeMessage(logsData events.CloudwatchLogsData, config Config) []byte {
 		TitleLink: linkURL,
 		Fallback:  "LogGroup[" + logGroup + "]",
 		Pretext:   "LogGroup[" + logGroup + "]",
-		Color:     config.getParameter("Color"),
+		Color:     config.getParameter(logGroup, logStream, "Color"),
 		Fields:    fields,
 		Timestamp: timestamp,
 	}
-
 	slackMessage := &SlackMessage{
-		Channel:     config.getParameter("Channel"),
+		Channel:     config.getParameter(logGroup, logStream, "Channel"),
 		LinkNames:   1,
-		Username:    config.getParameter("Username"),
-		IconEmoji:   config.getParameter("IconEmoji"),
+		Username:    config.getParameter(logGroup, logStream, "Username"),
+		IconEmoji:   config.getParameter(logGroup, logStream, "IconEmoji"),
 		Attachments: []Attachment{attachment},
 	}
-	fmt.Printf("%v", slackMessage)
 
 	jsonBytes, err := json.Marshal(slackMessage)
 	if err != nil {
 		fmt.Println("JSON Marshal error:", err)
 		return nil
 	}
-	fmt.Println(string(jsonBytes))
 	return jsonBytes
 }
 
