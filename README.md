@@ -1,64 +1,62 @@
 # cloudwatch-logs-to-slack-multi
 
-CloudWatch Logsのサブスクリプションフィルタから呼び出されてSlack通知するLambda関数
+Slack notifications called from CloudWatch Logs subscription filter A Lambda function that does
 
-## 概要
+## Overview
 
-CloudWatch LogsのLambdaサブスクリプションフィルタは複数のロググループに同じ関数を指定できる
-複数ロググループから受信したログイベントをこの関数で受け取り、Slack通知する
-通知する内容 （アイコン、通知ユーザ名、通知先チャンネル）はパラメータストアに保存する
-設定により切り替えることができる
+CloudWatch Logs' Lambda subscription filter can specify the same function for multiple log groups
+Receive log events from multiple log groups with this function and notify Slack
+The contents of the notification (icon, user name and channel to be notified) can be changed by saving the settings in the parameter store.
 
 ![App Architecture](https://github.com/miyaz/cloudwatch-logs-to-slack-multi/raw/master/cwlogs-to-slack.svg)
 
-## 設定方法
+## Configuration
 
-1. Slack通知のためにIncoming Webhook URLを取得する
+### Get the Incoming Webhook URL for Slack Notifications
 
-Incoming Webhook には下記２種類がある
+There are two types of Incoming Webhooks
 
-* Slack App から作成したIncomingWebhook
-  * こちらのIncomingWehookを使う場合は作成時に指定した通知先、ユーザ名、アイコンを
-  　上書きできない。そのため、通知内容ごとにIncomingWebhookを作成する必要がある
-  　後述するJSONで個別指定しても無視される
-  * https://api.slack.com/apps
-  * https://api.slack.com/messaging/webhooks#getting_started
-* Custom Integration から作成したIncomingWebhook
-  * こちらのIncomingWebhookを使う場合は作成時に指定した通知内容を後述するJSONで
-  　個別指定できる。条件に一致すれば通知内容を上書きして通知できる
-  * https://{workspace}.slack.com/apps/manage/custom-integrations
+* IncomingWebhook created from the Slack App
+  * If you use IncomingWehook here, you can use the notification, username and You can't overwrite the icon. Therefore, you need to create IncomingWebhook for each notification content.
+  * Even if you specify it in JSON, which will be described later, it will be ignored.
+  * Setup URL -> https://api.slack.com/apps
+  * Procedure URL -> https://api.slack.com/messaging/ webhooks#getting_started
+* IncomingWebhook created from Custom Integration
+  * If you use IncomingWebhook, you can specify individual JSON notifications specified at the time of creation, and if the conditions are met, you can overwrite the notification contents.
+  * Setup URL -> https://{workspace}.slack.com/apps/manage/custom-integrations
 
-2. Systems Managerのパラメータストアを作成する
+### Creating the Systems Manager parameter store.
 
-パラメータ名：/lambda/CWLogsToSlack/Configuration
-種類は：String or SecureString のいづれか
-設定値：下記の通りのJSON形式のテキスト
+* Parameter Name
+  * default value: /lambda/CWLogsToSlack/Configuration
+* Type
+  * String or SecureString
+* Value
+  * Text in JSON format as shown below
 
 ```
 {
   "default": {
     "hook_url":"https://hooks.slack.com/services/HOGEHOGEH/****",
-    "channel":"{デフォルトの通知先チャンネルID}",
-    "username":"{サービス／ステージを識別する名称}",
-    "icon_emoji":"{サービス／ステージを識別する絵文字アイコン}",
-    "color": "{デフォルトのカラー #D00000}",
+    "channel":"{default destination channel ID}",
+    "username":"{slack username}",
+    "icon_emoji":"{slack icon_emoji}",
+    "color": "{default color(e.g. #D00000)}"
   },
   "rules": [
     {
-      "if_prefix": "{logGroup:logStreamを前方一致で判定するPrefix}",
-      "hook_url":"{デフォルト値を上書きしたい場合に指定}",
-      "channel":"{デフォルト値を上書きしたい場合に指定}",
-      "color": "{デフォルト値を上書きしたい場合に指定}"
+      "if_prefix": "{Prefix matching string of logGroup:logStreambb}",
+      "hook_url":"{Specify when overwriting}",
+      "username":"{Specify when overwriting}",
+      "channel":"{Specify when overwriting}",
+      "color": "{Specify when overwriting}"
     },
-　　　　　・
-　　　　　・
-　　　　　・
+        <interchangeable>
+        <interchangeable>
+        <interchangeable>
   ]
 }
 ```
 
-if_prefixは 処理対象のログの{ロググループ:ログストリーム}という文字列を前方一致で判定し
-真であれば default設定を個別設定で上書きした設定でSlack通知される
-
-ruleには if_prefix とhook_url が必須
-
+* If_prefix is a string named {loggroup:logstream} in the log to be processed and If it's true, the default setting is overridden by the individual settings, and the Slack Notified.
+* If_prefix and hook_url are required in the rule.
