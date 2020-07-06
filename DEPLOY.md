@@ -17,6 +17,7 @@ modify template.yml
 git add ~
 git commit ~
 git push origin master
+git tag 0.0.2
 git push origin 0.0.2
 ```
 

@@ -8,7 +8,7 @@ CloudWatch Logs' Lambda subscription filter can specify the same function for mu
 Receive log events from multiple log groups with this function and notify Slack
 The contents of the notification (icon, user name and channel to be notified) can be changed by saving the settings in the parameter store.
 
-![App Architecture](https://github.com/miyaz/cloudwatch-logs-to-slack-multi/raw/master/cwlogs-to-slack.svg)
+![App Architecture](https://github.com/miyaz/cloudwatch-logs-to-slack-multi/raw/master/cwlogs-to-slack.png)
 
 ## Configuration
 
@@ -19,11 +19,11 @@ There are two types of Incoming Webhooks
 * IncomingWebhook created from the Slack App
   * If you use IncomingWehook here, you can use the notification, username and You can't overwrite the icon. Therefore, you need to create IncomingWebhook for each notification content.
   * Even if you specify it in JSON, which will be described later, it will be ignored.
-  * Setup URL -> https://api.slack.com/apps
-  * Procedure URL -> https://api.slack.com/messaging/ webhooks#getting_started
+  * [Setup here](https://api.slack.com/apps)
+    * [Instruction is here](https://api.slack.com/messaging/webhooks#getting_started)
 * IncomingWebhook created from Custom Integration
   * If you use IncomingWebhook, you can specify individual JSON notifications specified at the time of creation, and if the conditions are met, you can overwrite the notification contents.
-  * Setup URL -> https://{workspace}.slack.com/apps/manage/custom-integrations
+  * [Setup here](https://{workspace}.slack.com/apps/manage/custom-integrations)
 
 ### Creating the Systems Manager parameter store.
 

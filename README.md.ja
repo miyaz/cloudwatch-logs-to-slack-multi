@@ -8,7 +8,7 @@ CloudWatch LogsのLambdaサブスクリプションフィルタは複数のロ�
 複数ロググループから受信したログイベントをこの関数で受け取り、Slack通知する  
 通知する内容 （アイコン、通知ユーザ名、通知先チャンネル）はパラメータストアに保存する設定により切り替えることができる
 
-![App Architecture](https://github.com/miyaz/cloudwatch-logs-to-slack-multi/raw/master/cwlogs-to-slack.svg)
+![App Architecture](https://github.com/miyaz/cloudwatch-logs-to-slack-multi/raw/master/cwlogs-to-slack.png)
 
 ## 設定方法
 
