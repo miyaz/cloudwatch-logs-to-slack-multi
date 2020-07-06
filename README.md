@@ -1,36 +1,38 @@
-# cwLogToSlack
+# cloudwatch-logs-to-slack-multi
 
 CloudWatch Logsのサブスクリプションフィルタから呼び出されてSlack通知するLambda関数
 
 ## 概要
 
 CloudWatch LogsのLambdaサブスクリプションフィルタは複数のロググループに同じ関数を指定できる
-複数ロググループから受信したログイベントをこの関数で受け取り、設定に基づいて、通知する内容
-（アイコン、通知ユーザ名、通知先チャンネル）を切り替えられる
+複数ロググループから受信したログイベントをこの関数で受け取り、Slack通知する
+通知する内容 （アイコン、通知ユーザ名、通知先チャンネル）はパラメータストアに保存する
+設定により切り替えることができる
 
-
-
-指定された情報（アイコン、通知ユーザ、通知先チャンネル）
-
-
-
-## 初回セットアップ
-
-
-
-
-## デプロイ方法
-
-初回セットアップのみAWS SAM CLIを使用し、Lambda+IAMRole+
-
-
-
+![App Architecture](https://github.com/miyaz/cloudwatch-logs-to-slack-multi/raw/master/cwlogs-to-slack.svg)
 
 ## 設定方法
 
-Systems Managerのパラメータストア
+1. Slack通知のためにIncoming Webhook URLを取得する
 
-/lambda/CWLogsToSlack/Configuration
+Incoming Webhook には下記２種類がある
+
+* Slack App から作成したIncomingWebhook
+  * こちらのIncomingWehookを使う場合は作成時に指定した通知先、ユーザ名、アイコンを
+  　上書きできない。そのため、通知内容ごとにIncomingWebhookを作成する必要がある
+  　後述するJSONで個別指定しても無視される
+  * https://api.slack.com/apps
+  * https://api.slack.com/messaging/webhooks#getting_started
+* Custom Integration から作成したIncomingWebhook
+  * こちらのIncomingWebhookを使う場合は作成時に指定した通知内容を後述するJSONで
+  　個別指定できる。条件に一致すれば通知内容を上書きして通知できる
+  * https://{workspace}.slack.com/apps/manage/custom-integrations
+
+2. Systems Managerのパラメータストアを作成する
+
+パラメータ名：/lambda/CWLogsToSlack/Configuration
+種類は：String or SecureString のいづれか
+設定値：下記の通りのJSON形式のテキスト
 
 ```
 {
@@ -55,24 +57,8 @@ Systems Managerのパラメータストア
 }
 ```
 
+if_prefixは 処理対象のログの{ロググループ:ログストリーム}という文字列を前方一致で判定し
+真であれば default設定を個別設定で上書きした設定でSlack通知される
 
-SlackのIncommingWebhookには２種類あります。
-旧式
-https://sencorp-group.slack.com/apps/manage/custom-integrations
-Incoming WebHooksをクリックして作成する
-
-
-新式
-https://api.slack.com/apps
-でApp作ってActivate Incoming WebhooksしてAdd New Webhook to Workspaceボタン で作るやつ
-新式の場合はチャンネル、ユーザ名（AppName）、アイコンが固定なので
-rulesでprefixマッチしても color以外(channel,icon_emoji,username)を
-指定しても無視されます
-
-
-## 動作確認
-
-sam build
-sam local invoke --event event.json
-sam deploy --guided
+ruleには if_prefix とhook_url が必須
 
