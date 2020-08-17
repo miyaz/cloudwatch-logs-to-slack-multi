@@ -2,6 +2,8 @@
 
 Slack notifications called from CloudWatch Logs subscription filter A Lambda function that does
 
+[for more information in japanese](https://qiita.com/miyaz/items/ed2e0f30d1cc7b96d7c2)
+
 ## Overview
 
 CloudWatch Logs' Lambda subscription filter can specify the same function for multiple log groups
